@@ -1,13 +1,15 @@
 import { Sequelize } from 'sequelize';
 import 'dotenv/config';
 
+const isLocal = !process.env.DATABASE_URL?.includes('neon') && !process.env.DATABASE_URL?.includes('ssl');
+
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
-    dialectOptions: {
+    dialectOptions: isLocal ? {} : {
         ssl: {
             require: true,
-            rejectUnauthorized: false // Pour Neon (équivalent à sslmode=require)
+            rejectUnauthorized: false
         }
     },
     pool: {

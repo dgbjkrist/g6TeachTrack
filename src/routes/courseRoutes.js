@@ -14,9 +14,9 @@ import { validateCourse, validateUUIDParam } from '../middleware/validation.js';
 
 const router = Router();
 
-// Routes accessibles au secrétariat ou admin
-router.get('/', verifyToken, isSecretaireOrAdmin, getAllCourses);
-router.get('/:id', verifyToken, isSecretaireOrAdmin, validateUUIDParam('id'), getCourseById);
+// Lecture accessible à tous les utilisateurs authentifiés
+router.get('/', verifyToken, getAllCourses);
+router.get('/:id', verifyToken, validateUUIDParam('id'), getCourseById);
 router.post('/', verifyToken, isSecretaireOrAdmin, validateCourse, createCourse);
 router.put('/:id', verifyToken, isSecretaireOrAdmin, validateUUIDParam('id'), validateCourse, updateCourse);
 router.delete('/:id', verifyToken, isAdmin, validateUUIDParam('id'), deleteCourse);

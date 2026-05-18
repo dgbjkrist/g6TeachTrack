@@ -1,9 +1,11 @@
 import 'dotenv/config';
 import { Client } from 'pg';
 
+const isLocal = !process.env.DATABASE_URL?.includes('neon') && !process.env.DATABASE_URL?.includes('ssl');
+
 const client = new Client({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
+    ssl: isLocal ? false : { rejectUnauthorized: false }
 });
 
 async function reset() {
