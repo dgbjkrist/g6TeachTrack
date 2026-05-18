@@ -92,10 +92,8 @@ export default function LoginPage() {
             </form>
 
             <div className="mt-6 p-3 rounded-lg bg-muted text-xs space-y-1">
-              <p className="font-medium text-foreground">Comptes de démonstration :</p>
-              <p className="text-muted-foreground">Admin: admin@univ.dz / admin123</p>
-              <p className="text-muted-foreground">Secrétaire: secretaire@univ.dz / sec123</p>
-              <p className="text-muted-foreground">Enseignant: enseignant@univ.dz / ens123</p>
+              <p className="font-medium text-foreground">Compte par défaut :</p>
+              <p className="text-muted-foreground">Admin : admin@univ.dz / admin123</p>
             </div>
           </CardContent>
         </Card>

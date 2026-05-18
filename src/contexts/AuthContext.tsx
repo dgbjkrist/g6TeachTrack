@@ -1,12 +1,14 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { api, AuthResponse } from "@/lib/api";
 
 export type UserRole = "admin" | "secretaire" | "enseignant";
 
 export interface User {
   id: string;
   email: string;
-  name: string;
   role: UserRole;
+  teacher_id: string | null;
 }
 
 interface AuthContextType {
@@ -18,33 +20,39 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demo
-const MOCK_USERS: Record<string, User & { password: string }> = {
-  "admin@univ.dz": { id: "1", email: "admin@univ.dz", name: "Ahmed Benali", role: "admin", password: "admin123" },
-  "secretaire@univ.dz": { id: "2", email: "secretaire@univ.dz", name: "Fatima Zohra", role: "secretaire", password: "sec123" },
-  "enseignant@univ.dz": { id: "3", email: "enseignant@univ.dz", name: "Karim Hadj", role: "enseignant", password: "ens123" },
-};
-
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem("demo_user");
+    const saved = localStorage.getItem("auth_user");
     return saved ? JSON.parse(saved) : null;
   });
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    const mockUser = MOCK_USERS[email];
-    if (mockUser && mockUser.password === password) {
-      const { password: _, ...userData } = mockUser;
-      setUser(userData);
-      localStorage.setItem("demo_user", JSON.stringify(userData));
-      return true;
+    try {
+      const data = await api.post<AuthResponse>("/auth/login", { email, password });
+      if (data.success) {
+        const userData: User = {
+          id: data.user.id,
+          email: data.user.email,
+          role: data.user.role,
+          teacher_id: data.user.teacher_id,
+        };
+        setUser(userData);
+        localStorage.setItem("auth_user", JSON.stringify(userData));
+        localStorage.setItem("token", data.token);
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
     }
-    return false;
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("demo_user");
+    localStorage.removeItem("auth_user");
+    localStorage.removeItem("token");
+    queryClient.clear();
   };
 
   return (

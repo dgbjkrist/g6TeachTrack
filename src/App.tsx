@@ -8,6 +8,7 @@ import { AppLayout } from "@/components/AppLayout";
 import LoginPage from "@/pages/LoginPage";
 import DashboardPage from "@/pages/DashboardPage";
 import EnseignantsPage from "@/pages/EnseignantsPage";
+import EnseignantFichePage from "@/pages/EnseignantFichePage";
 import CoursPage from "@/pages/CoursPage";
 import CoursDetailPage from "@/pages/CoursDetailPage";
 import MesCoursPage from "@/pages/MesCoursPage";
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<AppLayout><DashboardPage /></AppLayout>} />
             <Route path="/enseignants" element={<AppLayout><EnseignantsPage /></AppLayout>} />
+            <Route path="/enseignants/:id" element={<AppLayout><EnseignantFichePage /></AppLayout>} />
             <Route path="/cours" element={<AppLayout><CoursPage /></AppLayout>} />
             <Route path="/cours/:id" element={<AppLayout><CoursDetailPage /></AppLayout>} />
             <Route path="/mes-cours" element={<AppLayout><MesCoursPage /></AppLayout>} />
