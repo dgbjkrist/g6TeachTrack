@@ -163,7 +163,7 @@ export default function EnseignantsPage() {
                       <TableCell>
                         <Badge variant={t.statut === "Permanent" ? "default" : "secondary"}>{t.statut}</Badge>
                       </TableCell>
-                      <TableCell className="text-right font-medium">{t.taux_horaire} DA</TableCell>
+                      <TableCell className="text-right font-medium">{t.taux_horaire} F CFA</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/enseignants/${t.id}`)}>
@@ -251,7 +251,7 @@ export default function EnseignantsPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Taux horaire (DA)</Label>
+              <Label>Taux horaire (F CFA)</Label>
               <Input
                 type="number"
                 value={form.taux_horaire}

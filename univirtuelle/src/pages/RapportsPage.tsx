@@ -24,9 +24,9 @@ function TeacherRow({ teacher }: { teacher: BackendTeacher }) {
       <TableCell className="text-right">{h?.total ?? "—"}h</TableCell>
       <TableCell className="text-right">{h?.normales ?? "—"}h</TableCell>
       <TableCell className="text-right">{h?.complementaires ?? "—"}h</TableCell>
-      <TableCell className="text-right">{teacher.taux_horaire} DA</TableCell>
+      <TableCell className="text-right">{teacher.taux_horaire} F CFA</TableCell>
       <TableCell className="text-right font-medium">
-        {h ? ((h.complementaires ?? 0) * teacher.taux_horaire).toLocaleString() + " DA" : "—"}
+        {h ? ((h.complementaires ?? 0) * teacher.taux_horaire).toLocaleString() + " F CFA" : "—"}
       </TableCell>
     </TableRow>
   );

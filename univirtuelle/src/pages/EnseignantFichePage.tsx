@@ -181,7 +181,7 @@ export default function EnseignantFichePage() {
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Clock className="h-4 w-4 shrink-0" />
-              <span>Taux horaire : <strong className="text-foreground">{teacher.taux_horaire} DA</strong></span>
+              <span>Taux horaire : <strong className="text-foreground">{teacher.taux_horaire} F CFA</strong></span>
             </div>
           </div>
         </CardContent>
@@ -209,7 +209,7 @@ export default function EnseignantFichePage() {
             <StatCard label="Heures complémentaires" value={Number(hours.complementaires).toFixed(1)} sub="au-delà du quota" />
             <StatCard
               label="Montant estimé"
-              value={`${(Number(hours.complementaires) * teacher.taux_horaire).toLocaleString("fr-DZ")} DA`}
+              value={`${(Number(hours.complementaires) * teacher.taux_horaire).toLocaleString("fr-DZ")} F CFA`}
               sub="heures complémentaires"
             />
           </div>

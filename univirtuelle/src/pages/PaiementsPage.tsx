@@ -63,7 +63,7 @@ function UpdateStatusDialog({
         </DialogHeader>
         <div className="space-y-4 text-sm">
           <p className="text-muted-foreground">
-            {payment.teacher?.prenom} {payment.teacher?.nom} — {Number(payment.montant_total).toLocaleString("fr-DZ")} DA
+            {payment.teacher?.prenom} {payment.teacher?.nom} — {Number(payment.montant_total).toLocaleString("fr-DZ")} F CFA
           </p>
           <div className="space-y-2">
             <Label>Statut</Label>
@@ -244,7 +244,7 @@ export default function PaiementsPage() {
           </div>
           <div className="rounded-lg border bg-card p-4">
             <p className="text-xs text-muted-foreground">Montant total</p>
-            <p className="text-2xl font-bold">{totalMontant.toLocaleString("fr-DZ")} DA</p>
+            <p className="text-2xl font-bold">{totalMontant.toLocaleString("fr-DZ")} F CFA</p>
           </div>
           <div className="rounded-lg border bg-card p-4">
             <p className="text-xs text-muted-foreground">Payés</p>
@@ -327,7 +327,7 @@ export default function PaiementsPage() {
                       <TableCell className="text-right">{Number(p.total_heures).toFixed(1)}h</TableCell>
                       <TableCell className="text-right">{Number(p.heures_complementaires).toFixed(1)}h</TableCell>
                       <TableCell className="text-right font-medium">
-                        {Number(p.montant_total).toLocaleString("fr-DZ")} DA
+                        {Number(p.montant_total).toLocaleString("fr-DZ")} F CFA
                       </TableCell>
                       <TableCell>
                         <Badge variant={statusVariant(p.status)}>

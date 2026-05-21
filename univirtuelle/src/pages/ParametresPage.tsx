@@ -166,7 +166,7 @@ export default function ParametresPage() {
         </Card>
 
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-base">Taux horaires (DA)</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-base">Taux horaires (F CFA)</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Assistant</Label>
