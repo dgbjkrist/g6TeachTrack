@@ -24,6 +24,7 @@ export const createResource = async (req, res, next) => {
         // Auto-création d'une activité "Création"
         if (req.user && req.user.teacher_id) {
             const heures = calculerHeures('Création', resource.complexite);
+            const activeYear = await db.AcademicYear.findOne({ where: { is_active: true } });
             const activity = await Activity.create({
                 enseignant_id: req.user.teacher_id,
                 resource_id: resource.id,
@@ -31,7 +32,8 @@ export const createResource = async (req, res, next) => {
                 complexite: resource.complexite,
                 date: new Date().toISOString().slice(0,10),
                 heures_calculees: heures,
-                statut: 'En attente'
+                statut: 'En attente',
+                academic_year_id: activeYear?.id ?? null
             });
 
             // Notifier les admins et secrétaires
@@ -63,6 +65,7 @@ export const updateResource = async (req, res, next) => {
         // Auto-activité "Mise à jour"
         if (req.user && req.user.teacher_id) {
             const heures = calculerHeures('Mise à jour', resource.complexite);
+            const activeYear = await db.AcademicYear.findOne({ where: { is_active: true } });
             await Activity.create({
                 enseignant_id: req.user.teacher_id,
                 resource_id: resource.id,
@@ -70,7 +73,8 @@ export const updateResource = async (req, res, next) => {
                 complexite: resource.complexite,
                 date: new Date().toISOString().slice(0,10),
                 heures_calculees: heures,
-                statut: 'En attente'
+                statut: 'En attente',
+                academic_year_id: activeYear?.id ?? null
             });
         }
         res.json({ success: true, data: resource });

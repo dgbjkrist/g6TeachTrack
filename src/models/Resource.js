@@ -17,8 +17,10 @@ const Resource = sequelize.define('Resource', {
 }, {
     tableName: 'resources',
     timestamps: true,
+    paranoid: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',
+    deletedAt: 'deleted_at',
     underscored: true
 });
 

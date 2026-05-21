@@ -12,8 +12,10 @@ const Course = sequelize.define('Course', {
 }, {
     tableName: 'courses',
     timestamps: true,
+    paranoid: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',
+    deletedAt: 'deleted_at',
     underscored: true
 });
 

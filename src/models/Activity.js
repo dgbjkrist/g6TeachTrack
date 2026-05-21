@@ -48,6 +48,12 @@ const Activity = sequelize.define('Activity', {
     },
     date_validation: {
         type: DataTypes.DATE
+    },
+    academic_year_id: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        references: { model: 'academic_years', key: 'id' },
+        onDelete: 'SET NULL'
     }
 }, {
     tableName: 'activities',

@@ -9,11 +9,12 @@ const Resource = db.Resource;
 // Liste des activités (avec pagination, filtres)
 export const getActivities = async (req, res, next) => {
     try {
-        const { page = 1, limit = 10, statut, enseignant_id } = req.query;
+        const { page = 1, limit = 10, statut, enseignant_id, academic_year_id } = req.query;
         const offset = (page - 1) * limit;
         const where = {};
         if (statut) where.statut = statut;
         if (enseignant_id) where.enseignant_id = enseignant_id;
+        if (academic_year_id) where.academic_year_id = academic_year_id;
 
         const { rows, count } = await Activity.findAndCountAll({
             where,

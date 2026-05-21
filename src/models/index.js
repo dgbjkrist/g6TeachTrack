@@ -65,5 +65,8 @@ Teacher.hasMany(Payment, { foreignKey: 'teacher_id', as: 'payments' });
 Payment.belongsTo(AcademicYear, { foreignKey: 'academic_year_id', as: 'academicYear' });
 AcademicYear.hasMany(Payment, { foreignKey: 'academic_year_id', as: 'payments' });
 
+Activity.belongsTo(AcademicYear, { foreignKey: 'academic_year_id', as: 'academicYear' });
+AcademicYear.hasMany(Activity, { foreignKey: 'academic_year_id', as: 'activities' });
+
 
 export default db;
