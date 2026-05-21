@@ -1,25 +1,20 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useCourses } from "@/hooks/useCourses";
 import { useSequences } from "@/hooks/useSequences";
 import { useResources } from "@/hooks/useResources";
+import { BackendResource } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, BookOpen, FileText, Video, HelpCircle, Gamepad2, ClipboardCheck, Info, Lock, Loader2 } from "lucide-react";
-
-const typeIcons: Record<string, React.ReactNode> = {
-  "Texte": <FileText className="h-4 w-4" />,
-  "Vidéo": <Video className="h-4 w-4" />,
-  "Document": <FileText className="h-4 w-4" />,
-  "Quiz": <HelpCircle className="h-4 w-4" />,
-  "Activité interactive": <Gamepad2 className="h-4 w-4" />,
-  "Évaluation": <ClipboardCheck className="h-4 w-4" />,
-};
+import { ArrowLeft, BookOpen, Info, Lock, Loader2, Eye } from "lucide-react";
+import { ResourceContentDialog, ResourceIndicators, resourceTypeIcon } from "@/components/ResourceContentDialog";
 
 export default function CoursDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [viewResource, setViewResource] = useState<BackendResource | null>(null);
 
   const { data: coursesData, isLoading: loadingCourse } = useCourses();
   const { data: seqData, isLoading: loadingSeq } = useSequences(id);
@@ -123,15 +118,19 @@ export default function CoursDetailPage() {
                 ) : (
                   <div className="space-y-2">
                     {seqRes.map((r) => (
-                      <div key={r.id} className="flex items-center gap-3 p-2 rounded-md bg-muted/50">
-                        <span className="text-muted-foreground">{typeIcons[r.type] ?? <FileText className="h-4 w-4" />}</span>
-                        <div className="flex-1 min-w-0">
+                      <div key={r.id} className="flex items-center gap-3 p-2 rounded-md bg-muted/50 group">
+                        <span className="text-muted-foreground shrink-0">{resourceTypeIcon[r.type]}</span>
+                        <div className="flex-1 min-w-0 space-y-1">
                           <p className="text-sm font-medium truncate">{r.titre}</p>
-                          <p className="text-xs text-muted-foreground truncate">{r.description}</p>
+                          {r.description && <p className="text-xs text-muted-foreground truncate">{r.description}</p>}
+                          <ResourceIndicators resource={r} />
                         </div>
                         <Badge variant={r.complexite === "Élevé" ? "destructive" : r.complexite === "Moyen" ? "default" : "secondary"} className="text-xs shrink-0">
                           {r.complexite}
                         </Badge>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setViewResource(r)}>
+                          <Eye className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
                     ))}
                   </div>
@@ -141,6 +140,8 @@ export default function CoursDetailPage() {
           );
         })
       )}
+
+      <ResourceContentDialog resource={viewResource} onClose={() => setViewResource(null)} />
     </div>
   );
 }

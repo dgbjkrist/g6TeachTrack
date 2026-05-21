@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useCourses, useCreateCourse, useUpdateCourse, useDeleteCourse, useAssignTeacher, useRemoveTeacher, CourseFormData } from "@/hooks/useCourses";
+import { useCourses, useCreateCourse, useUpdateCourse, useDeleteCourse, useAssignTeacher, useRemoveTeacher, useCarryOverAttributions, CourseFormData } from "@/hooks/useCourses";
 import { useTeachers } from "@/hooks/useTeachers";
+import { useAcademicYears } from "@/hooks/useAcademicYears";
 import { BackendCourse } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, Pencil, Trash2, Eye, UserPlus, Loader2 } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Eye, UserPlus, Loader2, CalendarDays, RefreshCw, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 const emptyForm: CourseFormData = {
@@ -30,13 +31,28 @@ export default function CoursPage() {
   const [attribCours, setAttribCours] = useState<BackendCourse | null>(null);
   const [selectedTeacherIds, setSelectedTeacherIds] = useState<string[]>([]);
 
-  const { data: coursesData, isLoading, isError } = useCourses();
+  const { data: yearsData } = useAcademicYears();
+  const years = yearsData?.data ?? [];
+  const activeYear = years.find((y) => y.is_active);
+  const [selectedYearId, setSelectedYearId] = useState<string>("all");
+  const defaultYearSet = useRef(false);
+  useEffect(() => {
+    if (!defaultYearSet.current && activeYear) {
+      setSelectedYearId(activeYear.id);
+      defaultYearSet.current = true;
+    }
+  }, [activeYear]);
+
+  const { data: coursesData, isLoading, isError } = useCourses({
+    academic_year_id: selectedYearId !== "all" ? selectedYearId : undefined,
+  });
   const { data: teachersData } = useTeachers();
   const createCourse = useCreateCourse();
   const updateCourse = useUpdateCourse();
   const deleteCourse = useDeleteCourse();
   const assignTeacher = useAssignTeacher();
   const removeTeacher = useRemoveTeacher();
+  const carryOver = useCarryOverAttributions();
 
   const allCourses = coursesData?.data ?? [];
   const allTeachers = teachersData?.data ?? [];
@@ -117,6 +133,15 @@ export default function CoursPage() {
     );
   };
 
+  const handleCarryOver = async () => {
+    try {
+      const result = await carryOver.mutateAsync();
+      toast.success(result.message ?? "Attributions reconduites");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Erreur lors de la reconduction");
+    }
+  };
+
   const isSaving = createCourse.isPending || updateCourse.isPending;
   const isAttribSaving = assignTeacher.isPending || removeTeacher.isPending;
 
@@ -125,9 +150,39 @@ export default function CoursPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Cours</h1>
-          <p className="text-muted-foreground text-sm mt-1">{allCourses.length} cours enregistrés</p>
+          <p className="text-muted-foreground text-sm mt-1 flex items-center gap-1.5">
+            <CalendarDays className="h-3.5 w-3.5" />
+            {selectedYearId !== "all"
+              ? <>{allCourses.length} cours — année <strong>{years.find((y) => y.id === selectedYearId)?.year_label}</strong></>
+              : <>{allCourses.length} cours (catalogue complet)</>}
+          </p>
         </div>
-        <Button onClick={openAdd} className="gap-2"><Plus className="h-4 w-4" /> Ajouter</Button>
+        <div className="flex items-center gap-2">
+          <Select value={selectedYearId} onValueChange={setSelectedYearId}>
+            <SelectTrigger className="w-44 h-9 text-sm"><SelectValue placeholder="Année" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes les années</SelectItem>
+              {years.map((y) => (
+                <SelectItem key={y.id} value={y.id}>
+                  {y.year_label}{y.is_active ? " ★" : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={handleCarryOver}
+            disabled={carryOver.isPending}
+            title="Copier toutes les attributions de l'année précédente vers l'année active"
+          >
+            {carryOver.isPending
+              ? <Loader2 className="h-4 w-4 animate-spin" />
+              : <RefreshCw className="h-4 w-4" />}
+            Reconduire N-1
+          </Button>
+          <Button onClick={openAdd} className="gap-2"><Plus className="h-4 w-4" /> Ajouter</Button>
+        </div>
       </div>
 
       <Card>
@@ -193,7 +248,12 @@ export default function CoursPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" title="Attribuer enseignants" onClick={() => openAttrib(c)}>
+                          <Button
+                            variant="ghost" size="icon" className="h-8 w-8"
+                            title={selectedYearId === "all" ? "Sélectionnez une année pour gérer les attributions" : "Attribuer enseignants"}
+                            onClick={() => openAttrib(c)}
+                            disabled={selectedYearId === "all"}
+                          >
                             <UserPlus className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/cours/${c.id}`)}>
@@ -295,9 +355,28 @@ export default function CoursPage() {
           </DialogHeader>
           {attribCours && (
             <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Cours : <span className="font-medium text-foreground">{attribCours.intitule}</span>
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Cours : <span className="font-medium text-foreground">{attribCours.intitule}</span>
+                </p>
+                {activeYear ? (
+                  <Badge variant="outline" className="gap-1 text-xs shrink-0">
+                    <CalendarDays className="h-3 w-3" />
+                    {activeYear.year_label}
+                  </Badge>
+                ) : (
+                  <Badge variant="destructive" className="gap-1 text-xs shrink-0">
+                    <AlertTriangle className="h-3 w-3" />
+                    Aucune année active
+                  </Badge>
+                )}
+              </div>
+              {selectedYearId !== "all" && selectedYearId !== activeYear?.id && (
+                <p className="text-xs text-amber-600 bg-amber-50 rounded-md px-3 py-2 flex items-center gap-1.5">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                  Vous consultez une année passée. Les modifications s'appliqueront à l'année active ({activeYear?.year_label ?? "—"}).
+                </p>
+              )}
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {allTeachers.map((t) => (
                   <label key={t.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 cursor-pointer">
@@ -320,7 +399,7 @@ export default function CoursPage() {
           )}
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setAttribDialogOpen(false)}>Annuler</Button>
-            <Button onClick={saveAttrib} disabled={isAttribSaving}>
+            <Button onClick={saveAttrib} disabled={isAttribSaving || !activeYear}>
               {isAttribSaving ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Enregistrement...</> : "Enregistrer"}
             </Button>
           </div>

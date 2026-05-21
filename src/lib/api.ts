@@ -131,7 +131,15 @@ export interface HoursData {
   normales: number;
   complementaires: number;
   quota: number;
+  academic_year_id: string | null;
+  academicYear: { id: string; year_label: string } | null;
   activities: BackendActivity[];
+}
+
+export interface BackendAcademicYear {
+  id: string;
+  year_label: string;
+  is_active: boolean;
 }
 
 export interface BackendNotification {

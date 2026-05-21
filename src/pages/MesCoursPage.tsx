@@ -2,12 +2,13 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCourses } from "@/hooks/useCourses";
 import { useMyHours } from "@/hooks/useHours";
+import { useAcademicYears } from "@/hooks/useAcademicYears";
 import { useSequences } from "@/hooks/useSequences";
 import { useResources } from "@/hooks/useResources";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Eye, Clock, FileText, Layers, Loader2 } from "lucide-react";
+import { BookOpen, Eye, Clock, FileText, Layers, Loader2, CalendarDays } from "lucide-react";
 import { BackendCourse } from "@/lib/api";
 
 function CourseCard({ course }: { course: BackendCourse }) {
@@ -45,7 +46,13 @@ function CourseCard({ course }: { course: BackendCourse }) {
 
 export default function MesCoursPage() {
   const { user } = useAuth();
-  const { data: coursesData, isLoading } = useCourses();
+  const { data: yearsData } = useAcademicYears();
+  const years = yearsData?.data ?? [];
+  const activeYear = years.find((y) => y.is_active);
+
+  const { data: coursesData, isLoading } = useCourses({
+    academic_year_id: activeYear?.id,
+  });
   const { data: hoursData } = useMyHours();
 
   const allCourses = coursesData?.data ?? [];
@@ -58,8 +65,11 @@ export default function MesCoursPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Mes cours</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          {mesCours.length} cours attribué{mesCours.length !== 1 ? "s" : ""}
+        <p className="text-muted-foreground text-sm mt-1 flex items-center gap-1.5">
+          <CalendarDays className="h-3.5 w-3.5" />
+          {activeYear
+            ? <>{mesCours.length} cours — année <strong>{activeYear.year_label}</strong></>
+            : <>{mesCours.length} cours attribué{mesCours.length !== 1 ? "s" : ""}</>}
         </p>
       </div>
 

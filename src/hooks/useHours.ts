@@ -15,10 +15,11 @@ export function useMyHours() {
   });
 }
 
-export function useTeacherHours(teacherId: string | undefined) {
+export function useTeacherHours(teacherId: string | undefined, academicYearId?: string) {
+  const params = academicYearId ? `?academic_year_id=${academicYearId}` : "";
   return useQuery({
-    queryKey: ["hours", teacherId],
-    queryFn: () => api.get<SingleResponse<HoursData>>(`/hours/teacher/${teacherId}`),
+    queryKey: ["hours", teacherId, academicYearId],
+    queryFn: () => api.get<SingleResponse<HoursData>>(`/hours/teacher/${teacherId}${params}`),
     enabled: !!teacherId,
   });
 }

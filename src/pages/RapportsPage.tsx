@@ -1,5 +1,6 @@
 import { useTeachers } from "@/hooks/useTeachers";
 import { useTeacherHours } from "@/hooks/useHours";
+import { useAcademicYears } from "@/hooks/useAcademicYears";
 import { downloadFile } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,7 +34,9 @@ function TeacherRow({ teacher }: { teacher: BackendTeacher }) {
 
 export default function RapportsPage() {
   const { data: teachersData, isLoading } = useTeachers();
+  const { data: yearsData } = useAcademicYears();
   const teachers = teachersData?.data ?? [];
+  const activeYear = yearsData?.data?.find((y) => y.is_active);
 
   const hoursQueries = useQueries({
     queries: teachers.map((t) => ({
@@ -75,7 +78,11 @@ export default function RapportsPage() {
             <Download className="h-4 w-4" /> Heures (Excel)
           </Button>
           <Button variant="outline" className="gap-2" onClick={() => handleDownload("payment")}>
-            <FileText className="h-4 w-4" /> Paiements (Excel)
+            <FileText className="h-4 w-4" />
+            Paiements (Excel)
+            {activeYear && (
+              <Badge variant="secondary" className="ml-1 text-xs">{activeYear.year_label}</Badge>
+            )}
           </Button>
           <Button variant="outline" className="gap-2" onClick={() => window.print()}>
             <Printer className="h-4 w-4" /> Imprimer

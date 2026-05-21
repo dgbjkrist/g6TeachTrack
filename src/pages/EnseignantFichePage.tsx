@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Loader2, Mail, Phone, GraduationCap, Building2, Clock, FileDown, Eye } from "lucide-react";
+import { ArrowLeft, Loader2, Mail, Phone, GraduationCap, Building2, Clock, FileDown, Eye, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 import { fetchBlob, downloadFile } from "@/lib/api";
 import { useTeacherById } from "@/hooks/useTeachers";
@@ -189,7 +189,15 @@ export default function EnseignantFichePage() {
 
       {/* Hours summary */}
       <div>
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">Bilan des heures</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Bilan des heures</h2>
+          {hours?.academicYear && (
+            <Badge variant="outline" className="gap-1 text-xs">
+              <CalendarDays className="h-3 w-3" />
+              {hours.academicYear.year_label}
+            </Badge>
+          )}
+        </div>
         {hLoading ? (
           <div className="flex items-center gap-2 text-muted-foreground text-sm py-4">
             <Loader2 className="h-4 w-4 animate-spin" /> Chargement...

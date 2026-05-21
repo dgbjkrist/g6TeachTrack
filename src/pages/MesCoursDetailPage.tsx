@@ -14,19 +14,11 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeft, Plus, Pencil, Trash2, ArrowUp, ArrowDown, BookOpen, FileText, Video, HelpCircle, Gamepad2, ClipboardCheck, Zap, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, ArrowUp, ArrowDown, BookOpen, FileText, Video, ClipboardCheck, Zap, Loader2, Eye } from "lucide-react";
 import { toast } from "sonner";
+import { ResourceContentDialog, ResourceIndicators, resourceTypeIcon } from "@/components/ResourceContentDialog";
 
 const RESSOURCE_TYPES = ["Texte", "Vidéo", "Document", "Quiz", "Activité interactive", "Évaluation"] as const;
-
-const typeIcons: Record<string, React.ReactNode> = {
-  "Texte": <FileText className="h-4 w-4" />,
-  "Vidéo": <Video className="h-4 w-4" />,
-  "Document": <FileText className="h-4 w-4" />,
-  "Quiz": <HelpCircle className="h-4 w-4" />,
-  "Activité interactive": <Gamepad2 className="h-4 w-4" />,
-  "Évaluation": <ClipboardCheck className="h-4 w-4" />,
-};
 
 const emptyResForm = (): Omit<ResourceFormData, "course_id"> => ({
   titre: "", type: "Texte", description: "", complexite: "Moyen",
@@ -69,6 +61,7 @@ export default function MesCoursDetailPage() {
   const [resDialogOpen, setResDialogOpen] = useState(false);
   const [editingRes, setEditingRes] = useState<BackendResource | null>(null);
   const [resForm, setResForm] = useState<Omit<ResourceFormData, "course_id">>(emptyResForm());
+  const [viewResource, setViewResource] = useState<BackendResource | null>(null);
 
   if (loadingCourse) {
     return (
@@ -271,13 +264,15 @@ export default function MesCoursDetailPage() {
                   <div className="space-y-2 mb-3">
                     {seqRes.map((r) => (
                       <div key={r.id} className="flex items-center gap-3 p-2 rounded-md bg-muted/50 group">
-                        <span className="text-muted-foreground">{typeIcons[r.type] ?? <FileText className="h-4 w-4" />}</span>
-                        <div className="flex-1 min-w-0">
+                        <span className="text-muted-foreground shrink-0">{resourceTypeIcon[r.type]}</span>
+                        <div className="flex-1 min-w-0 space-y-1">
                           <p className="text-sm font-medium truncate">{r.titre}</p>
-                          <p className="text-xs text-muted-foreground truncate">{r.description}</p>
+                          {r.description && <p className="text-xs text-muted-foreground truncate">{r.description}</p>}
+                          <ResourceIndicators resource={r} />
                         </div>
                         <Badge variant={r.complexite === "Élevé" ? "destructive" : r.complexite === "Moyen" ? "default" : "secondary"} className="text-xs shrink-0">{r.complexite}</Badge>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setViewResource(r)}><Eye className="h-3 w-3" /></Button>
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditRes(r)}><Pencil className="h-3 w-3" /></Button>
                           <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteRes(r.id)}><Trash2 className="h-3 w-3" /></Button>
                         </div>
@@ -302,13 +297,15 @@ export default function MesCoursDetailPage() {
               <div className="space-y-2">
                 {unassigned.map((r) => (
                   <div key={r.id} className="flex items-center gap-3 p-2 rounded-md bg-muted/50 group">
-                    <span className="text-muted-foreground">{typeIcons[r.type] ?? <FileText className="h-4 w-4" />}</span>
-                    <div className="flex-1 min-w-0">
+                    <span className="text-muted-foreground shrink-0">{resourceTypeIcon[r.type]}</span>
+                    <div className="flex-1 min-w-0 space-y-1">
                       <p className="text-sm font-medium truncate">{r.titre}</p>
-                      <p className="text-xs text-muted-foreground">{r.description}</p>
+                      {r.description && <p className="text-xs text-muted-foreground truncate">{r.description}</p>}
+                      <ResourceIndicators resource={r} />
                     </div>
-                    <Badge variant={r.complexite === "Élevé" ? "destructive" : r.complexite === "Moyen" ? "default" : "secondary"} className="text-xs">{r.complexite}</Badge>
+                    <Badge variant={r.complexite === "Élevé" ? "destructive" : r.complexite === "Moyen" ? "default" : "secondary"} className="text-xs shrink-0">{r.complexite}</Badge>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setViewResource(r)}><Eye className="h-3 w-3" /></Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditRes(r)}><Pencil className="h-3 w-3" /></Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteRes(r.id)}><Trash2 className="h-3 w-3" /></Button>
                     </div>
@@ -319,6 +316,8 @@ export default function MesCoursDetailPage() {
           </Card>
         </>
       )}
+
+      <ResourceContentDialog resource={viewResource} onClose={() => setViewResource(null)} />
 
       {/* Sequence Dialog */}
       <Dialog open={seqDialogOpen} onOpenChange={setSeqDialogOpen}>

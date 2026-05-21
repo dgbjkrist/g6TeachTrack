@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, BookOpen, FileText, BarChart3, Settings, Bell, Clock,
-  GraduationCap, LogOut, ChevronLeft
+  GraduationCap, LogOut, ChevronLeft, CalendarDays, CreditCard
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
@@ -27,6 +27,8 @@ const navItems: NavItem[] = [
   { title: "Heures", url: "/heures", icon: Clock, roles: ["admin", "secretaire", "enseignant"] },
   { title: "Rapports", url: "/rapports", icon: BarChart3, roles: ["admin", "secretaire", "enseignant"] },
   { title: "Notifications", url: "/notifications", icon: Bell, roles: ["admin", "secretaire", "enseignant"] },
+  { title: "Paiements", url: "/paiements", icon: CreditCard, roles: ["admin", "secretaire"] },
+  { title: "Années académiques", url: "/annees-academiques", icon: CalendarDays, roles: ["admin"] },
   { title: "Paramètres", url: "/parametres", icon: Settings, roles: ["admin"] },
 ];
 

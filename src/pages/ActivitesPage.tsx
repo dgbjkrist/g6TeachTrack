@@ -1,30 +1,47 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useActivities, useValidateActivity } from "@/hooks/useActivities";
+import { useAcademicYears } from "@/hooks/useAcademicYears";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { Search, CheckCircle, XCircle, Loader2, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 
 export default function ActivitesPage() {
   const { user } = useAuth();
+  const { data: yearsData } = useAcademicYears();
+  const years = yearsData?.data ?? [];
+  const activeYear = years.find((y) => y.is_active);
+
   const [search, setSearch] = useState("");
   const [filterStatut, setFilterStatut] = useState("all");
+  const [filterYear, setFilterYear] = useState("all");
+  const defaultYearSet = useRef(false);
+  useEffect(() => {
+    if (!defaultYearSet.current && activeYear) {
+      setFilterYear(activeYear.id);
+      defaultYearSet.current = true;
+    }
+  }, [activeYear]);
 
   const isEnseignant = user?.role === "enseignant";
 
-  const { data, isLoading, isError } = useActivities(
-    isEnseignant ? { enseignant_id: user?.teacher_id ?? undefined } : undefined
-  );
+  const { data, isLoading, isError } = useActivities({
+    ...(isEnseignant ? { enseignant_id: user?.teacher_id ?? undefined } : {}),
+    ...(filterYear !== "all" ? { academic_year_id: filterYear } : {}),
+  });
+
   const validate = useValidateActivity();
   const activities = data?.data ?? [];
 
   const filtered = activities.filter((a) => {
     const resourceTitle = a.resource?.titre ?? "";
-    const matchSearch = resourceTitle.toLowerCase().includes(search.toLowerCase()) ||
+    const matchSearch =
+      resourceTitle.toLowerCase().includes(search.toLowerCase()) ||
       `${a.teacher?.prenom ?? ""} ${a.teacher?.nom ?? ""}`.toLowerCase().includes(search.toLowerCase());
     const matchStatut = filterStatut === "all" || a.statut === filterStatut;
     return matchSearch && matchStatut;
@@ -39,12 +56,19 @@ export default function ActivitesPage() {
     }
   };
 
+  const selectedYear = years.find((y) => y.id === filterYear);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Activités pédagogiques</h1>
-          <p className="text-muted-foreground text-sm mt-1">{filtered.length} activité{filtered.length !== 1 ? "s" : ""}</p>
+          <p className="text-muted-foreground text-sm mt-1 flex items-center gap-1.5">
+            <CalendarDays className="h-3.5 w-3.5" />
+            {selectedYear
+              ? <>Année <strong>{selectedYear.year_label}</strong> — {filtered.length} activité{filtered.length !== 1 ? "s" : ""}</>
+              : <>{filtered.length} activité{filtered.length !== 1 ? "s" : ""} (toutes années)</>}
+          </p>
         </div>
       </div>
 
@@ -60,16 +84,26 @@ export default function ActivitesPage() {
                 className="pl-9"
               />
             </div>
-            <select
-              value={filterStatut}
-              onChange={(e) => setFilterStatut(e.target.value)}
-              className="h-10 rounded-md border border-input bg-background px-3 text-sm w-full sm:w-44"
-            >
-              <option value="all">Tous les statuts</option>
-              <option value="En attente">En attente</option>
-              <option value="Validée">Validée</option>
-              <option value="Rejetée">Rejetée</option>
-            </select>
+            <Select value={filterYear} onValueChange={setFilterYear}>
+              <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="Année" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les années</SelectItem>
+                {years.map((y) => (
+                  <SelectItem key={y.id} value={y.id}>
+                    {y.year_label}{y.is_active ? " ★" : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterStatut} onValueChange={setFilterStatut}>
+              <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="Statut" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les statuts</SelectItem>
+                <SelectItem value="En attente">En attente</SelectItem>
+                <SelectItem value="Validée">Validée</SelectItem>
+                <SelectItem value="Rejetée">Rejetée</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {isLoading && (
@@ -77,13 +111,11 @@ export default function ActivitesPage() {
               <Loader2 className="h-5 w-5 animate-spin" /> Chargement...
             </div>
           )}
-
           {isError && (
             <div className="py-8 text-center text-destructive text-sm">
               Impossible de charger les activités.
             </div>
           )}
-
           {!isLoading && !isError && (
             <div className="overflow-x-auto">
               <Table>

@@ -10,11 +10,12 @@ export interface CourseFormData {
   credits: number;
 }
 
-export function useCourses(params?: { search?: string; filiere?: string; niveau?: string }) {
+export function useCourses(params?: { search?: string; filiere?: string; niveau?: string; academic_year_id?: string }) {
   const query = new URLSearchParams();
   query.set("limit", "100");
   if (params?.filiere && params.filiere !== "all") query.set("filiere", params.filiere);
   if (params?.niveau && params.niveau !== "all") query.set("niveau", params.niveau);
+  if (params?.academic_year_id) query.set("academic_year_id", params.academic_year_id);
 
   return useQuery({
     queryKey: ["courses", params],
@@ -62,6 +63,22 @@ export function useRemoveTeacher() {
   return useMutation({
     mutationFn: ({ courseId, teacherId }: { courseId: string; teacherId: string }) =>
       api.delete(`/courses/${courseId}/teachers/${teacherId}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["courses"] }),
+  });
+}
+
+export interface CarryOverResult {
+  created: number;
+  skipped: number;
+  message: string;
+  from_year: string;
+  to_year: string;
+}
+
+export function useCarryOverAttributions() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.post<{ success: boolean } & CarryOverResult>("/courses/carry-over", {}),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["courses"] }),
   });
 }
