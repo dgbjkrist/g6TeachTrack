@@ -71,13 +71,22 @@ Le fichier `.env` n'est **pas** déployé (gitignore). Tout se configure dans le
 
 `PORT` est fourni automatiquement par Render — ne pas le définir.
 
-Après ajout de `DATABASE_URL` : lancer une fois les migrations :
+### Migrations sans Shell (plan Free)
+
+**Shell Render et pre-deploy command ne sont pas disponibles sur les Web Services gratuits.**
+
+Depuis **ta machine** (avec la même `DATABASE_URL` que sur Render) :
 
 ```sh
-# Shell Render du service backend, ou en local :
-DATABASE_URL="..." npm run migrate -w backend-pct
-npm run seed -w backend-pct   # optionnel (données de démo)
+cd /chemin/vers/uvci
+export DATABASE_URL="postgresql://..."   # URL Neon ou Postgres Render (External)
+npm run migrate -w backend-pct
+npm run seed -w backend-pct               # optionnel
 ```
+
+Alternative : coller le contenu de `backend-pct/schema.sql` dans l’éditeur SQL **Neon** (ou l’outil SQL de ta base).
+
+> Postgres **Render Free** expire au bout de 30 jours ; **Neon Free** convient mieux pour une BDD durable en gratuit.
 
 Puis sur le **frontend** Render, définir :
 

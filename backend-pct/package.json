@@ -9,7 +9,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "migrate": "node scripts/migrate.js",
+    "migrate": "node scripts/migrate.js && node scripts/migrate-academic-year.js && node scripts/migrate-soft-delete.js && node scripts/migrate-course-teachers-pk.js && node scripts/migrate-legacy-year.js",
     "seed": "node scripts/seed.js",
     "reset": "node scripts/reset.js"
   },

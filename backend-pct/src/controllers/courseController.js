@@ -14,10 +14,9 @@ export const getAllCourses = async (req, res, next) => {
         if (filiere) where.filiere = filiere;
         if (niveau) where.niveau = niveau;
 
-        // Quand un filtre annee est actif : INNER JOIN pour n'afficher que les cours attribues cette annee
-        // Sans filtre : LEFT JOIN pour afficher tout le catalogue
+        // Catalogue complet ; le filtre annee ne concerne que les attributions enseignants affichees
         const teacherInclude = academic_year_id
-            ? { model: Teacher, as: 'teachers', required: true, through: { attributes: ['academic_year_id'], where: { academic_year_id } } }
+            ? { model: Teacher, as: 'teachers', required: false, through: { attributes: ['academic_year_id'], where: { academic_year_id } } }
             : { model: Teacher, as: 'teachers', required: false, through: { attributes: ['academic_year_id'] } };
 
         const { count, rows } = await Course.findAndCountAll({

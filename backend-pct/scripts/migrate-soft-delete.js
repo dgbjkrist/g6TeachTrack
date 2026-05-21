@@ -1,35 +1,39 @@
-/**
- * Migration : ajoute la colonne deleted_at (soft delete) sur courses, teachers, resources, sequences.
- *
- * Usage : node scripts/migrate-soft-delete.js
- */
+// scripts/migrate-soft-delete.js
+import 'dotenv/config';
+import { Client } from 'pg';
 
-import { Sequelize, QueryTypes } from 'sequelize';
-import dotenv from 'dotenv';
-dotenv.config();
-
-const sequelize = new Sequelize(process.env.DATABASE_URL, { logging: false, dialect: 'postgres' });
+const client = new Client({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+});
 
 const tables = ['courses', 'teachers', 'resources', 'sequences', 'payments'];
 
 async function run() {
-    await sequelize.authenticate();
-    console.log('Connecté.\n');
+    try {
+        await client.connect();
 
-    for (const table of tables) {
-        await sequelize.query(
-            `ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL`,
-            { type: QueryTypes.RAW }
-        );
-        await sequelize.query(
-            `CREATE INDEX IF NOT EXISTS idx_${table}_deleted_at ON ${table}(deleted_at)`,
-            { type: QueryTypes.RAW }
-        );
-        console.log(`✓ ${table} — colonne deleted_at ajoutée`);
+        for (const table of tables) {
+            await client.query(`
+                ALTER TABLE ${table}
+                ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE;
+            `);
+
+            await client.query(`
+                CREATE INDEX IF NOT EXISTS idx_${table}_deleted_at
+                ON ${table}(deleted_at);
+            `);
+
+            console.log(`✔ ${table}`);
+        }
+
+        console.log('✔ soft delete done');
+    } catch (err) {
+        console.error(err);
+        process.exit(1);
+    } finally {
+        await client.end();
     }
-
-    console.log('\nMigration soft delete terminée.');
-    await sequelize.close();
 }
 
-run().catch((err) => { console.error(err); process.exit(1); });
+run();

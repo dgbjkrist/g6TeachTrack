@@ -13,7 +13,8 @@
     "build": "npm run build -w univirtuelle",
     "start:api": "npm run start -w backend-pct",
     "seed": "npm run seed -w backend-pct",
-    "migrate": "npm run migrate -w backend-pct"
+    "migrate": "npm run migrate -w backend-pct",
+    "setup-prod": "npm run reset -w backend-pct && npm run migrate -w backend-pct && npm run seed -w backend-pct"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
