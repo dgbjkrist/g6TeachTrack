@@ -16,6 +16,8 @@
     "migrate": "npm run migrate -w backend-pct"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "vite": "^5.4.21",
+    "@vitejs/plugin-react": "^4.3.4"
   }
 }
