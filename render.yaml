@@ -1,0 +1,16 @@
+# Blueprint Render — Static Site frontend (monorepo g6TeachTrack)
+# https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: g6-teach-track-web
+    runtime: static
+    repo: https://github.com/dgbjkrist/g6TeachTrack
+    branch: main
+    rootDir: univirtuelle
+    buildCommand: bash scripts/render-build.sh
+    staticPublishPath: dist
+    envVars:
+      - key: NODE_VERSION
+        value: "20.15.0"
+      - key: VITE_API_URL
+        sync: false
