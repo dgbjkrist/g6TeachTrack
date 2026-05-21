@@ -23,7 +23,14 @@ chmod +x scripts/dev.sh   # une seule fois
 - API : http://localhost:3000  
 - Frontend : http://localhost:8080  
 
-Le backend attend un fichier `backend-pct/.env` (voir `backend-pct/.env.example`).
+Le backend nécessite `backend-pct/.env` (non versionné) :
+
+```sh
+cp backend-pct/.env.example backend-pct/.env
+# puis éditez DATABASE_URL et JWT_SECRET
+```
+
+Si `.env` a disparu après la migration monorepo, recréez-le avec la même `DATABASE_URL` qu'avant (Neon ou PostgreSQL local).
 
 ## Scripts racine
 

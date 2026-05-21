@@ -1,9 +1,10 @@
 import { Sequelize } from 'sequelize';
-import 'dotenv/config';
+import { requireEnv } from './loadEnv.js';
 
-const isLocal = !process.env.DATABASE_URL?.includes('neon') && !process.env.DATABASE_URL?.includes('ssl');
+const databaseUrl = requireEnv('DATABASE_URL');
+const isLocal = !databaseUrl.includes('neon') && !databaseUrl.includes('ssl');
 
-const sequelize = new Sequelize(process.env.DATABASE_URL, {
+const sequelize = new Sequelize(databaseUrl, {
     dialect: 'postgres',
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
     dialectOptions: isLocal ? {} : {
