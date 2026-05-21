@@ -6,7 +6,14 @@ import routes from './src/routes/index.js';
 
 
 const app = express();
-app.use(cors());
+
+const frontendUrl = process.env.FRONTEND_URL?.trim() || "http://localhost:8080";
+app.use(
+  cors({
+    origin: frontendUrl,
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 

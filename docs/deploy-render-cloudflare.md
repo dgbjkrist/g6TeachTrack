@@ -54,10 +54,34 @@ Fichier `public/_redirects` : routage SPA (`/* → index.html`).
 | **Root Directory** | `backend-pct` |
 | **Build Command** | `npm ci` |
 | **Start Command** | `npm start` |
+| **NODE_VERSION** | `20.15.0` |
 
-Variables : `DATABASE_URL`, `JWT_SECRET`, `FRONTEND_URL`, `NODE_ENV=production`.
+### Variables d'environnement (Render → Environment)
 
-Après création de la BDD : lancer une fois `npm run migrate` (shell Render ou en local avec `DATABASE_URL` prod).
+Le fichier `.env` n'est **pas** déployé (gitignore). Tout se configure dans le dashboard :
+
+| Variable | Obligatoire | Exemple / note |
+|----------|-------------|----------------|
+| `DATABASE_URL` | **Oui** | URL Neon ou Postgres Render : `postgresql://user:pass@host/db?sslmode=require` |
+| `JWT_SECRET` | **Oui** | Chaîne longue aléatoire (ex. `openssl rand -hex 32`) |
+| `JWT_EXPIRES_IN` | Non | `7d` |
+| `FRONTEND_URL` | **Oui** | URL du site statique Render/Cloudflare, ex. `https://g6-teach-track-web.onrender.com` |
+| `NODE_ENV` | Recommandé | `production` |
+| `NODE_VERSION` | Recommandé | `20.15.0` |
+
+`PORT` est fourni automatiquement par Render — ne pas le définir.
+
+Après ajout de `DATABASE_URL` : lancer une fois les migrations :
+
+```sh
+# Shell Render du service backend, ou en local :
+DATABASE_URL="..." npm run migrate -w backend-pct
+npm run seed -w backend-pct   # optionnel (données de démo)
+```
+
+Puis sur le **frontend** Render, définir :
+
+`VITE_API_URL` = `https://VOTRE-API.onrender.com/api` (URL du Web Service backend + `/api`).
 
 ---
 

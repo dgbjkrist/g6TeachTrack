@@ -14,3 +14,25 @@ services:
         value: "20.15.0"
       - key: VITE_API_URL
         sync: false
+
+  - type: web
+    name: g6-teach-track-api
+    runtime: node
+    repo: https://github.com/dgbjkrist/g6TeachTrack
+    branch: main
+    rootDir: backend-pct
+    buildCommand: npm ci
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: "20.15.0"
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: FRONTEND_URL
+        sync: false
