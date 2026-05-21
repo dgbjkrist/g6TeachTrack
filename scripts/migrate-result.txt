@@ -1,0 +1,11 @@
+=== Step 2: Remove incomplete .git (if any) ===
+.git state: absent
+
+=== Step 3: git init -b main ===
+Initialized empty Git repository in /Users/dgbjkrist/Workspace/uvci/.git/
+
+=== Step 4: subtree add backend-pct ===
+fatal: ambiguous argument 'HEAD': unknown revision or path not in the working tree.
+Use '--' to separate paths from revisions, like this:
+'git <command> [<revision>...] -- [<file>...]'
+Working tree has modifications.  Cannot add.

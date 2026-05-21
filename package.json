@@ -1,0 +1,21 @@
+{
+  "name": "uvci",
+  "private": true,
+  "description": "Monorepo UniVirtuelle — frontend + API",
+  "workspaces": [
+    "univirtuelle",
+    "backend-pct"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c blue,magenta \"npm run dev -w backend-pct\" \"npm run dev -w univirtuelle\"",
+    "dev:api": "npm run dev -w backend-pct",
+    "dev:web": "npm run dev -w univirtuelle",
+    "build": "npm run build -w univirtuelle",
+    "start:api": "npm run start -w backend-pct",
+    "seed": "npm run seed -w backend-pct",
+    "migrate": "npm run migrate -w backend-pct"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
