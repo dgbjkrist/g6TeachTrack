@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, BookOpen, FileText, BarChart3, Settings, Bell, Clock,
-  GraduationCap, LogOut, ChevronLeft, CalendarDays, CreditCard
+  LogOut, ChevronLeft, CalendarDays, CreditCard
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
@@ -51,9 +51,11 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r-0">
       <SidebarContent className="bg-sidebar">
         <div className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary">
-            <GraduationCap className="h-5 w-5 text-sidebar-primary-foreground" />
-          </div>
+          <img
+            src="/logo-uvci.png"
+            alt="UVCI"
+            className="h-9 w-9 shrink-0 rounded-lg object-contain bg-sidebar-primary p-0.5"
+          />
           {!collapsed && (
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-sidebar-primary-foreground truncate">UniVirtuelle</p>

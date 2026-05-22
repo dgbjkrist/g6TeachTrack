@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { GraduationCap, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -33,9 +33,11 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center space-y-2">
-          <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary mx-auto">
-            <GraduationCap className="h-7 w-7 text-primary-foreground" />
-          </div>
+          <img
+            src="/logo-uvci.png"
+            alt="UVCI"
+            className="h-14 w-14 rounded-2xl object-contain mx-auto"
+          />
           <h1 className="text-2xl font-bold text-foreground">UniVirtuelle</h1>
           <p className="text-muted-foreground text-sm">Gestion des heures des enseignants</p>
         </div>
