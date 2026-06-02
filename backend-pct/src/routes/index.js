@@ -12,6 +12,7 @@ import paymentRoutes from './paymentRoutes.js';
 import notificationRoutes from './notificationRoutes.js';
 import academicYearRoutes from './academicYearRoutes.js';
 import uploadRoutes from './uploadRoutes.js';
+import adminRoutes from './adminRoutes.js';
 
 const router = Router();
 
@@ -30,6 +31,7 @@ router.use('/payments', paymentRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/academic-years', academicYearRoutes);
 router.use('/uploads', uploadRoutes);
+router.use('/admin', adminRoutes);
 
 router.get('/test', (req, res) => {
     res.json({ success: true, message: 'API fonctionne' });

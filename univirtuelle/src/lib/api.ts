@@ -184,3 +184,27 @@ export interface AuthResponse {
     is_active: boolean;
   };
 }
+
+// ============================================================
+// AJOUTS POUR LA GESTION DES UTILISATEURS ET MOTS DE PASSE
+// ============================================================
+
+export interface BackendUser {
+  id: string;
+  email: string;
+  role: "admin" | "secretaire" | "enseignant";
+  teacher_id: string | null;
+  is_active: boolean;
+  teacher?: { id: string; nom: string; prenom: string };
+}
+
+// Récupérer tous les utilisateurs (admin seulement)
+export const getUsers = () => api.get<{ data: BackendUser[] }>("/admin/users");
+
+// Réinitialiser le mot de passe d’un utilisateur (admin seulement)
+export const resetUserPassword = (userId: string, newPassword: string) =>
+  api.put(`/admin/users/${userId}/password`, { newPassword });
+
+// Changer son propre mot de passe (utilisateur connecté)
+export const changeOwnPassword = (currentPassword: string, newPassword: string) =>
+  api.post("/auth/change-password", { currentPassword, newPassword });

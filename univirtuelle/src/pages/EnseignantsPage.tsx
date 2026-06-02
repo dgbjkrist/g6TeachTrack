@@ -15,9 +15,10 @@ import { Plus, Search, Pencil, Trash2, Eye, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
+// État initial : taux_horaire sous forme de chaîne
 const emptyForm: TeacherFormData = {
   nom: "", prenom: "", grade: "Assistant", statut: "Permanent",
-  departement: "", taux_horaire: 2000, email: "", telephone: "",
+  departement: "", taux_horaire: "2000", email: "", telephone: "",
 };
 
 export default function EnseignantsPage() {
@@ -46,7 +47,7 @@ export default function EnseignantsPage() {
     setEditing(t);
     setForm({
       nom: t.nom, prenom: t.prenom, grade: t.grade, statut: t.statut,
-      departement: t.departement, taux_horaire: t.taux_horaire,
+      departement: t.departement, taux_horaire: String(t.taux_horaire), // conversion en chaîne
       email: t.email, telephone: t.telephone ?? "",
     });
     setDialogOpen(true);
@@ -57,12 +58,16 @@ export default function EnseignantsPage() {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
+    // Convertir taux_horaire en nombre (ou 0 si vide)
+    const taux = form.taux_horaire === "" ? 0 : Number(form.taux_horaire);
+    const payload = { ...form, taux_horaire: taux };
+
     try {
       if (editing) {
-        await updateTeacher.mutateAsync({ id: editing.id, data: form });
+        await updateTeacher.mutateAsync({ id: editing.id, data: payload });
         toast.success("Enseignant modifié");
       } else {
-        await createTeacher.mutateAsync(form);
+        await createTeacher.mutateAsync(payload);
         toast.success("Enseignant ajouté");
       }
       setDialogOpen(false);
@@ -255,7 +260,7 @@ export default function EnseignantsPage() {
               <Input
                 type="number"
                 value={form.taux_horaire}
-                onChange={(e) => setForm({ ...form, taux_horaire: Number(e.target.value) })}
+                onChange={(e) => setForm({ ...form, taux_horaire: e.target.value })}
               />
             </div>
           </div>
@@ -267,7 +272,6 @@ export default function EnseignantsPage() {
           </div>
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }

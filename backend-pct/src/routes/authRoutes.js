@@ -26,4 +26,5 @@ router.get('/me', verifyToken, getCurrentUser);
 router.post('/create-secretaire', verifyToken, isAdmin, validateCreateSecretaire, createSecretaire);
 router.post('/create-enseignant-account', verifyToken, isAdmin, validateCreateEnseignant, createEnseignantAccount);
 
+
 export default router;
