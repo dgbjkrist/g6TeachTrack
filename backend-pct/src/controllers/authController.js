@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken';
 import 'dotenv/config';
 import db from '../models/index.js';
-import bcrypt from 'bcryptjs';
 
 const User = db.User;
 
@@ -18,20 +17,13 @@ const generateToken = (user) => {
     );
 };
 
-// ============================================================
-// Connexion
-// ============================================================
 export const login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
-        console.log({email, password});
-
         const user = await User.findOne({
             where: { email: email.toLowerCase() }
         });
-
-        console.log({user});
 
         if (!user) {
             return res.status(401).json({
@@ -41,17 +33,13 @@ export const login = async (req, res, next) => {
         }
 
         const valid = await user.comparePassword(password);
-
-        console.log({valid});
-
+        console.log('Résultat comparaison :', valid);
         if (!valid) {
             return res.status(401).json({
                 success: false,
                 error: 'Email ou mot de passe incorrect'
             });
         }
-
-        
 
         if (!user.is_active) {
             return res.status(401).json({
@@ -81,9 +69,7 @@ export const login = async (req, res, next) => {
     }
 };
 
-// ============================================================
-// Création d'un compte secrétaire (admin seulement)
-// ============================================================
+// Créer un secrétaire (admin seulement)
 export const createSecretaire = async (req, res, next) => {
     try {
         const { email, password } = req.body;
@@ -91,11 +77,9 @@ export const createSecretaire = async (req, res, next) => {
         if (existing) {
             return res.status(409).json({ success: false, error: 'Cet email est déjà utilisé' });
         }
-        // Hachage du mot de passe
-        const hashedPassword = await bcrypt.hash(password, 10);
         const user = await User.create({
             email: email.toLowerCase(),
-            password_hash: hashedPassword,
+            password_hash: password,
             role: 'secretaire',
             is_active: true
         });
@@ -107,9 +91,7 @@ export const createSecretaire = async (req, res, next) => {
     } catch (error) { next(error); }
 };
 
-// ============================================================
-// Création d'un compte enseignant lié à un teacher existant
-// ============================================================
+// Créer un compte enseignant lié à un teacher existant (admin seulement)
 export const createEnseignantAccount = async (req, res, next) => {
     try {
         const { teacher_id, password } = req.body;
@@ -123,11 +105,9 @@ export const createEnseignantAccount = async (req, res, next) => {
         if (existing) {
             return res.status(409).json({ success: false, error: 'Un compte existe déjà pour cet enseignant' });
         }
-        // Hachage du mot de passe
-        const hashedPassword = await bcrypt.hash(password, 10);
         const user = await User.create({
             email: teacher.email,
-            password_hash: hashedPassword,
+            password_hash: password,
             role: 'enseignant',
             teacher_id: teacher.id,
             is_active: true
@@ -140,9 +120,6 @@ export const createEnseignantAccount = async (req, res, next) => {
     } catch (error) { next(error); }
 };
 
-// ============================================================
-// Récupérer l'utilisateur courant
-// ============================================================
 export const getCurrentUser = async (req, res, next) => {
     try {
         const user = await User.findByPk(req.user.id, {
@@ -150,31 +127,6 @@ export const getCurrentUser = async (req, res, next) => {
         });
         if (!user) return res.status(404).json({ success: false, error: 'Utilisateur non trouvé' });
         res.json({ success: true, user });
-    } catch (error) {
-        next(error);
-    }
-};
-
-// ============================================================
-// Modifier son propre mot de passe (utilisateur connecté)
-// ============================================================
-export const changePassword = async (req, res, next) => {
-    try {
-        const { currentPassword, newPassword } = req.body;
-        const user = await User.findByPk(req.user.id);
-        if (!user) return res.status(404).json({ success: false, error: 'Utilisateur non trouvé' });
-
-        const isValid = await user.comparePassword(currentPassword);
-        if (!isValid) return res.status(401).json({ success: false, error: 'Mot de passe actuel incorrect' });
-
-        if (!newPassword || newPassword.length < 6) {
-            return res.status(400).json({ success: false, error: 'Le nouveau mot de passe doit contenir au moins 6 caractères' });
-        }
-
-        user.password_hash = await bcrypt.hash(newPassword, 10);
-        await user.save();
-
-        res.json({ success: true, message: 'Mot de passe modifié avec succès' });
     } catch (error) {
         next(error);
     }
