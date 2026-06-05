@@ -1,0 +1,10 @@
+// src/utils/logger.js
+// Logger simple utilisant console (peut être remplacé par winston plus tard)
+const logger = {
+    info: (...args) => console.log('[INFO]', ...args),
+    error: (...args) => console.error('[ERROR]', ...args),
+    warn: (...args) => console.warn('[WARN]', ...args),
+    debug: (...args) => console.debug('[DEBUG]', ...args),
+};
+
+export default logger;

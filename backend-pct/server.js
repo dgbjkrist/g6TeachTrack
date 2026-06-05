@@ -8,9 +8,13 @@ import routes from './src/routes/index.js';
 const app = express();
 
 const frontendUrl = process.env.FRONTEND_URL?.trim() || "http://localhost:8080";
+const corsOrigins = process.env.NODE_ENV === 'development'
+  ? /^http:\/\/localhost:\d+$/ // Allow any localhost port in dev
+  : frontendUrl;
+
 app.use(
   cors({
-    origin: frontendUrl,
+    origin: corsOrigins,
     credentials: true,
   })
 );
