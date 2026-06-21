@@ -1,8 +1,7 @@
 import { useState } from "react";
 const departements = ["Informatique", "Mathématiques", "Physique", "Électronique", "Chimie", "Biologie", "Économie", "Droit", "Langues"];
 
-import { useTeachers, useCreateTeacher, useUpdateTeacher, useDeleteTeacher, TeacherFormData } from "@/hooks/useTeachers";
-import { BackendTeacher } from "@/lib/api";
+import { useTeachers, useCreateTeacher, TeacherFormData } from "@/hooks/useTeachers";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,14 +10,14 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, Pencil, Trash2, Eye, Loader2 } from "lucide-react";
+import { Plus, Search, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { Skeleton, TableRowsSkeleton } from "@/components/ui/skeleton-blocks";
 
-// État initial : taux_horaire sous forme de chaîne
 const emptyForm: TeacherFormData = {
   nom: "", prenom: "", grade: "Assistant", statut: "Permanent",
-  departement: "", taux_horaire: "2000", email: "", telephone: "",
+  departement: "", email: "", telephone: "",
 };
 
 export default function EnseignantsPage() {
@@ -26,30 +25,16 @@ export default function EnseignantsPage() {
   const [filterDept, setFilterDept] = useState("all");
   const [filterGrade, setFilterGrade] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editing, setEditing] = useState<BackendTeacher | null>(null);
   const [form, setForm] = useState<TeacherFormData>(emptyForm);
   const navigate = useNavigate();
 
   const { data, isLoading, isError } = useTeachers({ search, departement: filterDept, grade: filterGrade });
   const createTeacher = useCreateTeacher();
-  const updateTeacher = useUpdateTeacher();
-  const deleteTeacher = useDeleteTeacher();
 
   const teachers = data?.data ?? [];
 
   const openAdd = () => {
-    setEditing(null);
     setForm(emptyForm);
-    setDialogOpen(true);
-  };
-
-  const openEdit = (t: BackendTeacher) => {
-    setEditing(t);
-    setForm({
-      nom: t.nom, prenom: t.prenom, grade: t.grade, statut: t.statut,
-      departement: t.departement, taux_horaire: String(t.taux_horaire), // conversion en chaîne
-      email: t.email, telephone: t.telephone ?? "",
-    });
     setDialogOpen(true);
   };
 
@@ -58,41 +43,22 @@ export default function EnseignantsPage() {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
-    // Convertir taux_horaire en nombre (ou 0 si vide)
-    const taux = form.taux_horaire === "" ? 0 : Number(form.taux_horaire);
-    const payload = { ...form, taux_horaire: taux };
-
     try {
-      if (editing) {
-        await updateTeacher.mutateAsync({ id: editing.id, data: payload });
-        toast.success("Enseignant modifié");
-      } else {
-        await createTeacher.mutateAsync(payload);
-        toast.success("Enseignant ajouté");
-      }
+      const res = await createTeacher.mutateAsync(form);
+      toast.success("Enseignant ajouté");
       setDialogOpen(false);
+      if (res.data?.id) navigate(`/enseignants/${res.data.id}`);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Erreur lors de la sauvegarde");
     }
   };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteTeacher.mutateAsync(id);
-      toast.success("Enseignant supprimé");
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Erreur lors de la suppression");
-    }
-  };
-
-  const isSaving = createTeacher.isPending || updateTeacher.isPending;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Enseignants</h1>
-          <p className="text-muted-foreground text-sm mt-1">{teachers.length} enseignants enregistrés</p>
+          <p className="text-muted-foreground text-sm mt-1">{teachers.length} enseignants — cliquez sur une ligne pour ouvrir la fiche</p>
         </div>
         <Button onClick={openAdd} className="gap-2">
           <Plus className="h-4 w-4" /> Ajouter
@@ -104,12 +70,7 @@ export default function EnseignantsPage() {
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
-              />
+              <Input placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
             </div>
             <Select value={filterDept} onValueChange={setFilterDept}>
               <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="Département" /></SelectTrigger>
@@ -129,34 +90,39 @@ export default function EnseignantsPage() {
             </Select>
           </div>
 
-          {isLoading && (
-            <div className="flex items-center justify-center py-12 text-muted-foreground gap-2">
-              <Loader2 className="h-5 w-5 animate-spin" /> Chargement...
-            </div>
-          )}
-
-          {isError && (
-            <div className="py-8 text-center text-destructive text-sm">
-              Impossible de charger les enseignants. Vérifiez que le serveur est démarré.
-            </div>
-          )}
-
-          {!isLoading && !isError && (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nom</TableHead>
+                  <TableHead>Grade</TableHead>
+                  <TableHead>Département</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead className="text-right">Taux horaire</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRowsSkeleton rows={6} cols={5} />
+                ) : isError ? (
                   <TableRow>
-                    <TableHead>Nom</TableHead>
-                    <TableHead>Grade</TableHead>
-                    <TableHead>Département</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead className="text-right">Taux horaire</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableCell colSpan={5} className="text-center text-destructive py-8">
+                      Impossible de charger les enseignants.
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {teachers.map((t) => (
-                    <TableRow key={t.id}>
+                ) : teachers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                      Aucun enseignant trouvé
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  teachers.map((t) => (
+                    <TableRow
+                      key={t.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => navigate(`/enseignants/${t.id}`)}
+                    >
                       <TableCell>
                         <div>
                           <p className="font-medium">{t.prenom} {t.nom}</p>
@@ -168,46 +134,24 @@ export default function EnseignantsPage() {
                       <TableCell>
                         <Badge variant={t.statut === "Permanent" ? "default" : "secondary"}>{t.statut}</Badge>
                       </TableCell>
-                      <TableCell className="text-right font-medium">{t.taux_horaire} F CFA</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/enseignants/${t.id}`)}>
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(t)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost" size="icon" className="h-8 w-8 text-destructive"
-                            onClick={() => handleDelete(t.id)}
-                            disabled={deleteTeacher.isPending}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
+                      <TableCell className="text-right font-medium">{t.taux_horaire.toLocaleString()} F CFA</TableCell>
                     </TableRow>
-                  ))}
-                  {teachers.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                        Aucun enseignant trouvé
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editing ? "Modifier l'enseignant" : "Ajouter un enseignant"}</DialogTitle>
+            <DialogTitle>Ajouter un enseignant</DialogTitle>
           </DialogHeader>
+          <p className="text-sm text-muted-foreground -mt-2">
+            Le taux horaire sera calculé automatiquement selon le grade, le statut et les paramètres globaux.
+          </p>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Nom *</Label>
@@ -246,7 +190,7 @@ export default function EnseignantsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 col-span-2">
               <Label>Département *</Label>
               <Select value={form.departement} onValueChange={(v) => setForm({ ...form, departement: v })}>
                 <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
@@ -255,19 +199,11 @@ export default function EnseignantsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label>Taux horaire (F CFA)</Label>
-              <Input
-                type="number"
-                value={form.taux_horaire}
-                onChange={(e) => setForm({ ...form, taux_horaire: e.target.value })}
-              />
-            </div>
           </div>
           <div className="flex justify-end gap-2 pt-4">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Annuler</Button>
-            <Button onClick={handleSave} disabled={isSaving}>
-              {isSaving ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Enregistrement...</> : (editing ? "Modifier" : "Ajouter")}
+            <Button onClick={handleSave} disabled={createTeacher.isPending}>
+              {createTeacher.isPending ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Enregistrement...</> : "Ajouter"}
             </Button>
           </div>
         </DialogContent>

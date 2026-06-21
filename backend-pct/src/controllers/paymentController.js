@@ -43,7 +43,7 @@ export const generatePayment = async (req, res, next) => {
         const settings = await db.AppSetting.findAll();
         const quota = parseFloat(settings.find(s => s.key === 'normal_hours_quota')?.value || 240);
         const heuresComplementaires = Math.max(0, totalHeures - quota);
-        const montantTotal = totalHeures * teacher.taux_horaire;
+        const montantTotal = heuresComplementaires * teacher.taux_horaire;
 
         const payment = await Payment.create({
             teacher_id,

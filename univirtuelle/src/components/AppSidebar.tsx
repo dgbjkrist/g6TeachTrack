@@ -29,7 +29,7 @@ const navItems: NavItem[] = [
   { title: "Notifications", url: "/notifications", icon: Bell, roles: ["admin", "secretaire", "enseignant"] },
   { title: "Paiements", url: "/paiements", icon: CreditCard, roles: ["admin", "secretaire"] },
   { title: "Années académiques", url: "/annees-academiques", icon: CalendarDays, roles: ["admin"] },
-  { title: "Paramètres", url: "/parametres", icon: Settings, roles: ["admin"] },
+  { title: "Paramètres", url: "/parametres", icon: Settings, roles: ["admin", "secretaire", "enseignant"] },
 ];
 
 export function AppSidebar() {

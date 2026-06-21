@@ -7,7 +7,6 @@ export interface TeacherFormData {
   grade: "Assistant" | "Maître-Assistant" | "Professeur";
   statut: "Permanent" | "Vacataire";
   departement: string;
-  taux_horaire: number;
   email: string;
   telephone?: string;
 }
@@ -39,7 +38,10 @@ export function useUpdateTeacher() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<TeacherFormData> }) =>
       api.put<SingleResponse<BackendTeacher>>(`/teachers/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["teachers"] }),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: ["teachers"] });
+      qc.invalidateQueries({ queryKey: ["teachers", vars.id] });
+    },
   });
 }
 

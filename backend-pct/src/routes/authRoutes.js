@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { login, getCurrentUser, createSecretaire, createEnseignantAccount } from '../controllers/authController.js';
+import { login, getCurrentUser, createSecretaire, createEnseignantAccount, changePassword } from '../controllers/authController.js';
 import { verifyToken } from '../middleware/auth.js';
 import { isAdmin } from '../middleware/roleCheck.js';
 import { body } from 'express-validator';
@@ -21,6 +21,7 @@ const validateCreateEnseignant = [
 
 router.post('/login', login);
 router.get('/me', verifyToken, getCurrentUser);
+router.post('/change-password', verifyToken, changePassword);
 
 // Admin seulement
 router.post('/create-secretaire', verifyToken, isAdmin, validateCreateSecretaire, createSecretaire);

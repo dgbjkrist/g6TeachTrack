@@ -67,7 +67,33 @@ export interface BackendTeacher {
   telephone: string | null;
   created_at: string;
   updated_at: string;
+  linkedUser?: BackendLinkedUser | null;
 }
+
+export interface BackendLinkedUser {
+  id: string;
+  email: string;
+  role: "admin" | "secretaire" | "enseignant";
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface AppSettings {
+  normal_hours_quota?: string;
+  base_hours_creation?: string;
+  base_hours_update?: string;
+  hourly_rate_assistant_permanent?: string;
+  hourly_rate_maitre_permanent?: string;
+  hourly_rate_professor_permanent?: string;
+  hourly_rate_assistant_vacataire?: string;
+  hourly_rate_maitre_vacataire?: string;
+  hourly_rate_professor_vacataire?: string;
+  [key: string]: string | undefined;
+}
+
+export const getSettings = () => api.get<{ success: boolean; data: AppSettings }>("/settings");
+export const updateSettings = (data: Partial<AppSettings>) =>
+  api.put<{ success: boolean; message: string }>("/settings", data);
 
 export interface BackendCourse {
   id: string;

@@ -13,7 +13,7 @@ export interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -27,9 +27,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return saved ? JSON.parse(saved) : null;
   });
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      const data = await api.post<AuthResponse>("/auth/login", { email, password });
+      const normalizedEmail = email.trim().toLowerCase();
+      const data = await api.post<AuthResponse>("/auth/login", { email: normalizedEmail, password });
       if (data.success) {
         const userData: User = {
           id: data.user.id,
@@ -40,11 +41,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(userData);
         localStorage.setItem("auth_user", JSON.stringify(userData));
         localStorage.setItem("token", data.token);
-        return true;
+        return { success: true };
       }
-      return false;
-    } catch {
-      return false;
+      return { success: false, error: "Email ou mot de passe incorrect" };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Email ou mot de passe incorrect";
+      return { success: false, error: message };
     }
   };
 

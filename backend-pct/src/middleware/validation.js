@@ -15,7 +15,6 @@ export const validateTeacher = [
     body('grade').isIn(['Assistant', 'Maître-Assistant', 'Professeur']),
     body('statut').isIn(['Permanent', 'Vacataire']),
     body('departement').notEmpty(),
-    body('taux_horaire').isInt({ min: 0 }),
     validateRequest
 ];
 
@@ -27,7 +26,6 @@ export const validateTeacherUpdate = [
     body('grade').optional().isIn(['Assistant', 'Maître-Assistant', 'Professeur']),
     body('statut').optional().isIn(['Permanent', 'Vacataire']),
     body('departement').optional().notEmpty(),
-    body('taux_horaire').optional().isInt({ min: 0 }),
     validateRequest
 ];
 

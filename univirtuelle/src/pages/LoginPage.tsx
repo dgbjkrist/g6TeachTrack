@@ -20,12 +20,12 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const success = await login(email, password);
+    const result = await login(email, password);
     setLoading(false);
-    if (success) {
+    if (result.success) {
       navigate("/dashboard");
     } else {
-      setError("Email ou mot de passe incorrect");
+      setError(result.error ?? "Email ou mot de passe incorrect");
     }
   };
 

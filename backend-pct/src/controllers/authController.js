@@ -19,10 +19,18 @@ const generateToken = (user) => {
 
 export const login = async (req, res, next) => {
     try {
-        const { email, password } = req.body;
+        const email = (req.body.email || '').trim().toLowerCase();
+        const password = req.body.password || '';
+
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                error: 'Email et mot de passe requis'
+            });
+        }
 
         const user = await User.findOne({
-            where: { email: email.toLowerCase() }
+            where: { email }
         });
 
         if (!user) {
@@ -33,7 +41,6 @@ export const login = async (req, res, next) => {
         }
 
         const valid = await user.comparePassword(password);
-        console.log('Résultat comparaison :', valid);
         if (!valid) {
             return res.status(401).json({
                 success: false,
@@ -101,12 +108,13 @@ export const createEnseignantAccount = async (req, res, next) => {
         if (!teacher) {
             return res.status(404).json({ success: false, error: 'Enseignant introuvable' });
         }
-        const existing = await User.findOne({ where: { email: teacher.email } });
+        const email = teacher.email.trim().toLowerCase();
+        const existing = await User.findOne({ where: { email } });
         if (existing) {
             return res.status(409).json({ success: false, error: 'Un compte existe déjà pour cet enseignant' });
         }
         const user = await User.create({
-            email: teacher.email,
+            email,
             password_hash: password,
             role: 'enseignant',
             teacher_id: teacher.id,
@@ -127,6 +135,31 @@ export const getCurrentUser = async (req, res, next) => {
         });
         if (!user) return res.status(404).json({ success: false, error: 'Utilisateur non trouvé' });
         res.json({ success: true, user });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const changePassword = async (req, res, next) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ success: false, error: 'Mot de passe actuel et nouveau requis' });
+        }
+        if (newPassword.length < 6) {
+            return res.status(400).json({ success: false, error: 'Le nouveau mot de passe doit contenir au moins 6 caractères' });
+        }
+        const user = await User.findByPk(req.user.id);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'Utilisateur non trouvé' });
+        }
+        const valid = await user.comparePassword(currentPassword);
+        if (!valid) {
+            return res.status(401).json({ success: false, error: 'Mot de passe actuel incorrect' });
+        }
+        user.password_hash = newPassword;
+        await user.save();
+        res.json({ success: true, message: 'Mot de passe modifié avec succès' });
     } catch (error) {
         next(error);
     }

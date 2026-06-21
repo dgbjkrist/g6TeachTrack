@@ -1,5 +1,4 @@
 // src/controllers/adminController.js
-import bcrypt from 'bcryptjs';
 import db from '../models/index.js';
 import logger from '../utils/logger.js';
 
@@ -39,7 +38,8 @@ export const updateUserPassword = async (req, res, next) => {
             });
         }
 
-        user.password_hash = await bcrypt.hash(newPassword, 10);
+        // Texte clair ici : le hook beforeUpdate du modèle User applique bcrypt une seule fois.
+        user.password_hash = newPassword;
         await user.save();
 
         logger.info(`Mot de passe modifié par admin pour l'utilisateur ${user.email} (ID: ${user.id})`);

@@ -1,4 +1,5 @@
 import db from '../models/index.js';
+import { syncAllTeacherHourlyRates } from '../utils/hourlyRates.js';
 
 const AppSetting = db.AppSetting;
 
@@ -17,10 +18,17 @@ export const updateSettings = async (req, res, next) => {
     try {
         const updates = req.body;
         for (const [key, value] of Object.entries(updates)) {
-            await AppSetting.update(
-                { value: String(value) },
-                { where: { key } }
-            );
+            const [setting] = await AppSetting.findOrCreate({
+                where: { key },
+                defaults: { value: String(value), description: key },
+            });
+            if (setting) {
+                await setting.update({ value: String(value) });
+            }
+        }
+        const rateKeys = Object.keys(updates).some((k) => k.startsWith('hourly_rate_'));
+        if (rateKeys) {
+            await syncAllTeacherHourlyRates(db.Teacher, AppSetting);
         }
         res.json({ success: true, message: 'Paramètres mis à jour' });
     } catch (error) { next(error); }

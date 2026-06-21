@@ -254,9 +254,15 @@ INSERT INTO app_settings (key, value, description) VALUES
 ('complexity_multiplier_low', '1', 'Coefficient complexité Faible'),
 ('complexity_multiplier_medium', '1.5', 'Coefficient complexité Moyen'),
 ('complexity_multiplier_high', '2', 'Coefficient complexité Élevé'),
-('hourly_rate_assistant', '2000', 'Taux horaire Assistant'),
-('hourly_rate_maitre', '2800', 'Taux Maître-Assistant'),
-('hourly_rate_professor', '3500', 'Taux Professeur')
+('hourly_rate_assistant', '2000', 'Taux horaire Assistant (legacy)'),
+('hourly_rate_maitre', '2800', 'Taux Maître-Assistant (legacy)'),
+('hourly_rate_professor', '3500', 'Taux Professeur (legacy)'),
+('hourly_rate_assistant_permanent', '2000', 'Taux Assistant — Permanent'),
+('hourly_rate_maitre_permanent', '2800', 'Taux Maître-Assistant — Permanent'),
+('hourly_rate_professor_permanent', '3500', 'Taux Professeur — Permanent'),
+('hourly_rate_assistant_vacataire', '1500', 'Taux Assistant — Vacataire'),
+('hourly_rate_maitre_vacataire', '2200', 'Taux Maître-Assistant — Vacataire'),
+('hourly_rate_professor_vacataire', '2800', 'Taux Professeur — Vacataire')
 ON CONFLICT (key) DO NOTHING;
 
 -- Insertion de quelques départements
