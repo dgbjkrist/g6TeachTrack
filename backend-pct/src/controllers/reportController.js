@@ -1,6 +1,7 @@
 import PDFDocument from 'pdfkit';
 import ExcelJS from 'exceljs';
 import db from '../models/index.js';
+import { computeTeacherPaymentAmounts } from '../utils/paymentCalculations.js';
 import path from 'path';
 import fs from 'fs';
 
@@ -53,7 +54,7 @@ export const exportTeacherSheet = async (req, res, next) => {
         const complementaires = Math.max(0, totalHours - quota);
         const tauxHoraire = teacher.taux_horaire;
         const montantComplement = complementaires * tauxHoraire;
-        const montantTotal = totalHours * tauxHoraire;
+        const montantTotal = montantComplement;
 
         const doc = new PDFDocument({ margin: 50, size: 'A4' });
         res.setHeader('Content-Type', 'application/pdf');
@@ -116,10 +117,10 @@ export const exportTeacherSheet = async (req, res, next) => {
         doc.font('Helvetica').text(`${formatNumber(complementaires)} h`, col2Value, rowVol);
         rowVol += 16;
 
-        doc.font('Helvetica-Bold').text('Montant (paie normale) :', col1Label, rowVol);
+        doc.font('Helvetica-Bold').text('Montant dû (heures complémentaires) :', col1Label, rowVol);
         doc.font('Helvetica').text(`${formatNumber(montantTotal)} FCFA`, col1Value, rowVol);
-        doc.font('Helvetica-Bold').text('Montant (heures complémentaires) :', col2Label, rowVol);
-        doc.font('Helvetica').text(`${formatNumber(montantComplement)} FCFA`, col2Value, rowVol);
+        doc.font('Helvetica-Bold').text('Détail :', col2Label, rowVol);
+        doc.font('Helvetica').text(`${formatNumber(complementaires)} h × ${formatNumber(tauxHoraire)} FCFA`, col2Value, rowVol);
         rowVol += 16;
         currentY = rowVol + 20;
 
@@ -302,8 +303,6 @@ export const exportGlobalHours = async (req, res, next) => {
 export const exportPayment = async (req, res, next) => {
     try {
         const teachers = await Teacher.findAll();
-        const settings = await AppSetting.findAll();
-        const quota = parseFloat(settings.find(s => s.key === 'normal_hours_quota')?.value || 240);
 
         // Récupérer l'année académique active
         let activeYear = await db.AcademicYear.findOne({ where: { is_active: true } });
@@ -354,52 +353,22 @@ export const exportPayment = async (req, res, next) => {
         });
         worksheet.getRow(3).height = 40;
 
-        // ========== DONNÉES ET ENREGISTREMENT DES PAIEMENTS ==========
+        // ========== DONNÉES (export lecture seule — pas d'écriture en base) ==========
         for (const teacher of teachers) {
-            const activities = await Activity.findAll({
-                where: { enseignant_id: teacher.id, statut: 'Validée' }
+            const amounts = await computeTeacherPaymentAmounts(db, {
+                teacherId: teacher.id,
+                academicYearId: activeYear?.id ?? null,
+                tauxHoraire: teacher.taux_horaire,
             });
-            const totalHeures = activities.reduce((sum, a) => sum + parseFloat(a.heures_calculees), 0);
-            const normales = Math.min(totalHeures, quota);
-            const complementaires = Math.max(0, totalHeures - quota);
-            const montantComplement = complementaires * teacher.taux_horaire;
-            const montantTotal = totalHeures * teacher.taux_horaire;
 
-            // ==== ENREGISTREMENT DANS payments ====
-            try {
-                const whereClause = { teacher_id: teacher.id };
-                if (activeYear) whereClause.academic_year_id = activeYear.id;
-                const existingPayment = await db.Payment.findOne({ where: whereClause });
-                if (existingPayment) {
-                    // Mise à jour
-                    existingPayment.total_heures = totalHeures;
-                    existingPayment.heures_complementaires = complementaires;
-                    existingPayment.montant_total = montantTotal;
-                    await existingPayment.save();
-                } else {
-                    // Création
-                    await db.Payment.create({
-                        teacher_id: teacher.id,
-                        academic_year_id: activeYear ? activeYear.id : null,
-                        total_heures: totalHeures,
-                        heures_complementaires: complementaires,
-                        montant_total: montantTotal,
-                        status: 'en_attente'
-                    });
-                }
-            } catch (err) {
-                console.error(`Erreur paiement pour ${teacher.nom} ${teacher.prenom}:`, err);
-            }
-
-            // Ajout dans l’Excel
             worksheet.addRow([
                 teacher.nom,
                 teacher.prenom,
-                teacher.taux_horaire,
-                normales,
-                complementaires,
-                montantComplement,
-                montantTotal
+                parseFloat(teacher.taux_horaire),
+                amounts.heuresNormales,
+                amounts.heuresComplementaires,
+                amounts.montantTotal,
+                amounts.montantTotal,
             ]);
         }
 

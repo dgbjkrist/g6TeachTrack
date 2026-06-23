@@ -62,6 +62,35 @@ export function useUpdatePaymentStatus() {
   });
 }
 
+export function useRecalculatePayment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      api.put<{ success: boolean; data: Payment }>(`/payments/${id}/recalculate`, {}),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["payments"] }),
+  });
+}
+
+export interface PaymentPreview {
+  totalHeures: number;
+  heuresNormales: number;
+  heuresComplementaires: number;
+  quota: number;
+  montantTotal: number;
+  taux_horaire: number;
+  academic_year_id: string | null;
+}
+
+export function usePaymentPreview(teacherId: string, academicYearId?: string) {
+  const params = new URLSearchParams({ teacher_id: teacherId });
+  if (academicYearId && academicYearId !== "__none__") params.set("academic_year_id", academicYearId);
+  return useQuery({
+    queryKey: ["payment-preview", teacherId, academicYearId],
+    queryFn: () =>
+      api.get<{ success: boolean; data: PaymentPreview }>(`/payments/preview?${params}`),
+    enabled: !!teacherId,
+  });
+}
 export function useDeletePayment() {
   const qc = useQueryClient();
   return useMutation({

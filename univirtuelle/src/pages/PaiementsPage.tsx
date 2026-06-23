@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Trash2, CheckCircle, Loader2, CreditCard, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { usePayments, useGeneratePayment, useUpdatePaymentStatus, useDeletePayment, Payment } from "@/hooks/usePayments";
+import { usePayments, useGeneratePayment, useUpdatePaymentStatus, useDeletePayment, useRecalculatePayment, usePaymentPreview, Payment } from "@/hooks/usePayments";
 import { useTeachers } from "@/hooks/useTeachers";
 import { useAcademicYears } from "@/hooks/useAcademicYears";
 
@@ -112,13 +112,14 @@ function GenerateDialog({ onClose }: { onClose: () => void }) {
 
   const [teacherId, setTeacherId] = useState("");
   const [yearId, setYearId] = useState(activeYear?.id ?? "__none__");
+  const preview = usePaymentPreview(teacherId, yearId);
 
   const handleGenerate = async () => {
     if (!teacherId) { toast.error("Sélectionnez un enseignant"); return; }
     try {
       await generate.mutateAsync({
         teacher_id: teacherId,
-        academic_year_id: yearId === "__none__" ? undefined : yearId,
+        academic_year_id: yearId === "__none__" ? null : yearId,
       });
       toast.success("Paiement généré");
       onClose();
@@ -166,8 +167,17 @@ function GenerateDialog({ onClose }: { onClose: () => void }) {
               </p>
             )}
           </div>
-          <div className="rounded-md bg-muted/50 p-3 text-xs text-muted-foreground">
-            Le montant sera calculé à partir des heures d'activités <strong>validées</strong> de l'enseignant.
+          <div className="rounded-md bg-muted/50 p-3 text-xs text-muted-foreground space-y-1">
+            <p>
+              Montant = <strong>heures complémentaires × taux horaire</strong> (activités validées, année sélectionnée).
+            </p>
+            {teacherId && preview.data?.data && (
+              <p className="text-foreground">
+                Aperçu : {Number(preview.data.data.heuresComplementaires).toFixed(1)} h compl. ×{" "}
+                {preview.data.data.taux_horaire.toLocaleString("fr-FR")} F CFA ={" "}
+                <strong>{preview.data.data.montantTotal.toLocaleString("fr-FR")} F CFA</strong>
+              </p>
+            )}
           </div>
         </div>
         <div className="flex justify-end gap-2 pt-2">
@@ -188,6 +198,7 @@ export default function PaiementsPage() {
   const { data: teachersData } = useTeachers();
   const { data: yearsData } = useAcademicYears();
   const deletePayment = useDeletePayment();
+  const recalculate = useRecalculatePayment();
 
   const teachers = teachersData?.data ?? [];
   const years = yearsData?.data ?? [];
@@ -210,6 +221,15 @@ export default function PaiementsPage() {
   const totalMontant = payments.reduce((s, p) => s + Number(p.montant_total), 0);
   const paidCount = payments.filter((p) => p.status === "payé" || p.status === "paye").length;
 
+  const handleRecalculate = async (p: Payment) => {
+    try {
+      await recalculate.mutateAsync(p.id);
+      toast.success("Montant recalculé à partir des heures actuelles");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Erreur");
+    }
+  };
+
   const handleDelete = async (p: Payment) => {
     try {
       await deletePayment.mutateAsync(p.id);
@@ -226,7 +246,7 @@ export default function PaiementsPage() {
           <h1 className="text-2xl font-bold text-foreground">Paiements</h1>
           <p className="text-muted-foreground text-sm mt-1">
             {activeYear
-              ? <>Année active : <strong>{activeYear.year_label}</strong></>
+              ? <>Année active : <strong>{activeYear.year_label}</strong> — montant = h. complémentaires × taux horaire</>
               : "Aucune année académique active"}
           </p>
         </div>
@@ -343,6 +363,18 @@ export default function PaiementsPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
+                          {p.status === "en_attente" && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              title="Recalculer le montant"
+                              onClick={() => handleRecalculate(p)}
+                              disabled={recalculate.isPending}
+                            >
+                              <RefreshCw className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="icon"
@@ -350,7 +382,7 @@ export default function PaiementsPage() {
                             title="Modifier le statut"
                             onClick={() => setEditPayment(p)}
                           >
-                            <RefreshCw className="h-4 w-4" />
+                            <CheckCircle className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
